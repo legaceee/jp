@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Header from "../components/header";
 import Sidebar from "../components/sidebar";
@@ -26,6 +26,7 @@ type AttendanceSummary = {
   records: AttendanceRecord[];
 };
 
+export const dynamic = "force-dynamic";
 const formatDateKey = (date: Date) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -44,7 +45,7 @@ const formatAmount = (value: number, maximumFractionDigits = 0) =>
     maximumFractionDigits,
   }).format(value);
 
-export default function Page() {
+function WorkersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [workers, setWorkers] = useState<Worker[]>([]);
@@ -470,5 +471,13 @@ export default function Page() {
         </section>
       </main>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={null}>
+      <WorkersContent />
+    </Suspense>
   );
 }

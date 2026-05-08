@@ -1,0 +1,16 @@
+SUSPENSE FIX FOR NEXT.JS BUILD ERROR
+
+Issue:
+- Next.js build failed with: "useSearchParams() should be wrapped in a suspense boundary".
+- This happens when useSearchParams is used in a page without a Suspense boundary.
+
+Fix Applied:
+- Wrapped the components that call useSearchParams in React <Suspense>.
+- The page now renders a Suspense boundary and a child component that contains the hook.
+
+Files updated:
+- apps/web/app/attendance/page.tsx
+- apps/web/app/workers/page.tsx
+
+Result:
+- The build no longer complains about missing Suspense for useSearchParams.

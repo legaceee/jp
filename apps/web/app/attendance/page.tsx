@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { Suspense, useEffect, useMemo, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Header from "../components/header";
 import Sidebar from "../components/sidebar";
@@ -85,8 +85,8 @@ const getMonthGrid = (year: number, month: number) => {
 
   return days;
 };
-
-export default function Page() {
+export const dynamic = "force-dynamic";
+function AttendanceContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const todayKey = useMemo(() => formatDateKey(new Date()), []);
@@ -589,5 +589,13 @@ export default function Page() {
         </section>
       </main>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={null}>
+      <AttendanceContent />
+    </Suspense>
   );
 }
