@@ -58,7 +58,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addToast = useCallback(
-    (message: string, tone: ToastTone) => {
+    (message: unknown, tone: ToastTone) => {
       const id = createId();
       const normalized = normalizeMessage(message);
       setToasts((prev) => [...prev, { id, message: normalized, tone }]);
