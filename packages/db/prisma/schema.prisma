@@ -1,0 +1,49 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+id Int @id @default(autoincrement())
+email String  @unique
+name String
+password String
+workers Worker[]
+}
+
+model Worker {
+  id          Int          @id @default(autoincrement())
+  name        String
+  wage        Int
+  phone       String?
+  isActive    Boolean      @default(true)
+  createdAt  DateTime @default(now())
+  userId Int
+  user User @relation(fields: [userId],references: [id])
+  attendances Attendance[]
+}
+
+model Attendance {
+  id              Int               @id @default(autoincrement())
+  workerId        Int
+  attendanceDate  DateTime
+  attendanceValue          Float
+  worker          Worker            @relation(fields: [workerId], references: [id])
+  createdAt   DateTime @default(now())
+  @@unique([workerId, attendanceDate])
+}
+
+// enum AttendanceStatus {
+//   FULL_DAY
+//   HALF_DAY
+//   ABSENT
+// }
