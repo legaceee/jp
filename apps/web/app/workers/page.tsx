@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Header from "../components/header";
 import Sidebar from "../components/sidebar";
@@ -87,7 +87,7 @@ export default function Page() {
     [workers, selectedWorkerId],
   );
 
-  const loadWorkers = async () => {
+  const loadWorkers = useCallback(async () => {
     setIsLoading(true);
     setStatusMessage(null);
     try {
@@ -103,20 +103,21 @@ export default function Page() {
       const list = data.workers ?? [];
       setWorkers(list);
       if (list.length > 0) {
+        const fallbackId = list[0]!.id;
         setSelectedWorkerId((prev) => {
           if (prev) {
             return list.some((worker) => worker.id === prev)
               ? prev
-              : list[0].id;
+              : fallbackId;
           }
           const paramId = searchParams.get("workerId");
           if (paramId && Number.isFinite(Number(paramId))) {
             const parsedId = Number(paramId);
             return list.some((worker) => worker.id === parsedId)
               ? parsedId
-              : list[0].id;
+              : fallbackId;
           }
-          return list[0].id;
+          return fallbackId;
         });
       }
     } catch (error) {
@@ -126,47 +127,46 @@ export default function Page() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [addToast, searchParams]);
 
-  const loadAttendance = async (
-    workerId: number,
-    rangeStart: string,
-    rangeEnd: string,
-  ) => {
-    setIsFetchingAttendance(true);
-    setStatusMessage(null);
-    try {
-      const query = new URLSearchParams({
-        workerId: String(workerId),
-        startDate: rangeStart,
-        endDate: rangeEnd,
-      });
-      const response = await apiFetch(
-        `/attendance/getattendance?${query.toString()}`,
-        {
-          cache: "no-store",
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error(
-          await readErrorMessage(response, "Unable to load attendance"),
+  const loadAttendance = useCallback(
+    async (workerId: number, rangeStart: string, rangeEnd: string) => {
+      setIsFetchingAttendance(true);
+      setStatusMessage(null);
+      try {
+        const query = new URLSearchParams({
+          workerId: String(workerId),
+          startDate: rangeStart,
+          endDate: rangeEnd,
+        });
+        const response = await apiFetch(
+          `/attendance/getattendance?${query.toString()}`,
+          {
+            cache: "no-store",
+          },
         );
-      }
 
-      const data = (await response.json()) as {
-        data: AttendanceSummary;
-      };
-      setAttendanceSummary(data.data);
-    } catch (error) {
-      setAttendanceSummary(null);
-      const message = formatErrorMessage(error, "Request failed");
-      setStatusMessage(message);
-      addToast(message, "error");
-    } finally {
-      setIsFetchingAttendance(false);
-    }
-  };
+        if (!response.ok) {
+          throw new Error(
+            await readErrorMessage(response, "Unable to load attendance"),
+          );
+        }
+
+        const data = (await response.json()) as {
+          data: AttendanceSummary;
+        };
+        setAttendanceSummary(data.data);
+      } catch (error) {
+        setAttendanceSummary(null);
+        const message = formatErrorMessage(error, "Request failed");
+        setStatusMessage(message);
+        addToast(message, "error");
+      } finally {
+        setIsFetchingAttendance(false);
+      }
+    },
+    [addToast],
+  );
 
   useEffect(() => {
     const user = getStoredUser();
@@ -183,13 +183,13 @@ export default function Page() {
     if (isAuthed) {
       void loadWorkers();
     }
-  }, [isAuthed]);
+  }, [isAuthed, loadWorkers]);
 
   useEffect(() => {
     if (selectedWorkerId) {
       void loadAttendance(selectedWorkerId, startDate, endDate);
     }
-  }, [selectedWorkerId, startDate, endDate]);
+  }, [loadAttendance, selectedWorkerId, startDate, endDate]);
 
   useEffect(() => {
     const currentWorker = searchParams.get("workerId");
