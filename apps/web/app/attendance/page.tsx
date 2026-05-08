@@ -37,7 +37,7 @@ const formatDateKey = (date: Date) => {
 
 const parseDateKey = (dateKey: string) => {
   const [year, month, day] = dateKey.split("-").map(Number);
-  return new Date(year, month - 1, day);
+  return new Date(year!, month! - 1, day);
 };
 
 const buildDefaultAttendance = (
